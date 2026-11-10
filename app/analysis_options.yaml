@@ -1,1 +1,8 @@
 include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    # Local standalone verification harness (run with the plain Dart SDK,
+    # see tool/verify_pure.dart header) — not app code, prints + relative
+    # imports are intentional there.
+    - tool/**
