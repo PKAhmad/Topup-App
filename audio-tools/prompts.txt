@@ -1,0 +1,17 @@
+prompt_welcome
+prompt_choose_country
+prompt_enter_number
+prompt_number_is
+prompt_confirm_number
+prompt_invalid_number
+prompt_choose_amount
+prompt_you_chose
+prompt_review
+prompt_you_send
+prompt_to_number
+prompt_total_is
+prompt_processing
+prompt_success
+prompt_failed_refund
+prompt_error
+prompt_history
