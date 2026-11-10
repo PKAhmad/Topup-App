@@ -3,6 +3,16 @@ plugins {
     id 'kotlin-android'
     id 'dev.flutter.flutter-gradle-plugin'
 }
+
+// Version comes from pubspec.yaml (flutter.versionCode / flutter.versionName
+// in local.properties) — never hardcode it here again.
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader -> localProperties.load(reader) }
+}
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode') ?: '1'
+def flutterVersionName = localProperties.getProperty('flutter.versionName') ?: '1.0'
 android {
     namespace = 'app.topup.topup_app'
     compileSdk = 34
@@ -13,8 +23,8 @@ android {
         applicationId = 'app.topup.topup_app' // PROVISIONAL — final name/keystore come at name-day, same as Karyab
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = '0.1.0'
+        versionCode = flutterVersionCode.toInteger()
+        versionName = flutterVersionName
     }
     buildTypes { release { signingConfig = signingConfigs.debug } }
 }
