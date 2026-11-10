@@ -113,3 +113,16 @@ pay-per-topup, Afghan + international. Backend addition needed by the app
   aapt: versionName 0.2.0 / code 2, artifact sha256 ef526e3f… matched.
   Local copy: ~/workspace/topup-app/Topup-App-v0.2-debug.apk.
 - Pure checks 30/30 (verify_pure); CI analyze + flutter tests passed.
+
+## v0.3 — modern design + local-first review (2026-11-10 night)
+- CEO verdicts on v0.2: voice absent (placeholders — generation started,
+  then CEO STOPPED it himself: he is training a NEW ElevenLabs voice and
+  clips will be generated with that voice when ready); design 'really poor'
+  vs modern top-up apps; amount step dead-ended on 'problem occurred'.
+- Fixes shipped (commit f02f85a, run 42889494651 SUCCESS): hero home +
+  quick country chips, searchable country list, 4-step progress bar,
+  operator header card, Popular amount badge; review is local-first
+  (instant render, server only adds total/enables Pay, plain-language
+  offline notice + retry, 10 s create timeout).
+- Verified by aapt: 0.3.0 / code 3; artifact sha256 2f052ae2… matched.
+  Local copy: ~/workspace/topup-app/Topup-App-v0.3-debug.apk.
