@@ -40,6 +40,15 @@ void main() {
   eq(groupForDisplay('+93791234567'), '+93 791 234 567', 'grouping');
   eq(isPlausibleE164('+93791234567'), true, 'plausible');
   eq(isPlausibleE164('+9379'), false, 'implausible');
+  eq(countryIsoFromE164('+93791234567'), 'AF', 'country from number AF');
+  eq(countryIsoFromE164('+491712345678'), 'DE', 'country from number DE');
+  eq(localOperatorHint('+93701234567')!.name, 'AWCC', 'local AWCC');
+  eq(localOperatorHint('+93791234567')!.name, 'Roshan', 'local Roshan');
+  eq(localOperatorHint('+93771234567')!.name, 'MTN Afghanistan', 'local MTN');
+  eq(localOperatorHint('+93781234567')!.name, 'Etisalat Afghanistan', 'local Etisalat');
+  eq(localOperatorHint('+93741234567')!.name, 'Salaam', 'local Salaam');
+  eq(localOperatorHint('+93751234567')!.name, '', 'local unknown prefix, country only');
+  eq(localOperatorHint('+923001234567')!.name, 'Jazz', 'local Jazz');
   // String parity: every key in all three languages, non-empty.
   var parity = 0;
   for (final key in Strings.keys) {

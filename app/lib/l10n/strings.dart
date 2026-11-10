@@ -26,6 +26,7 @@ class Strings {
     'number_example': {'ps': 'بېلګه: 079 123 4567', 'fa': 'مثال: 079 123 4567', 'en': 'Example: 079 123 4567'},
     'detecting': {'ps': 'شبکه موندل کېږي...', 'fa': 'در حال یافتن شبکه...', 'en': 'Finding the network...'},
     'operator_label': {'ps': 'شبکه', 'fa': 'شبکه', 'en': 'Network'},
+    'operator_auto': {'ps': 'شبکه: په اتومات ډول', 'fa': 'شبکه: خودکار', 'en': 'Network: automatic'},
     'confirm_q': {'ps': 'ایا دا شمېره سمه ده؟', 'fa': 'آیا این شماره درست است؟', 'en': 'Is this number correct?'},
     'yes_correct': {'ps': 'هو، سمه ده', 'fa': 'بله، درست است', 'en': 'Yes, correct'},
     'no_change': {'ps': 'نه، بدلول یې', 'fa': 'نه، تغییرش بده', 'en': 'No, change it'},

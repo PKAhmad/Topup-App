@@ -18,6 +18,9 @@ class TopupFlow extends ChangeNotifier {
   void setNumber(String phone, OperatorInfo op) {
     e164 = phone;
     operator = op;
+    // The number itself is the truth: if it belongs to another country than
+    // the one tapped, the flow follows the number.
+    countryIso = op.countryIso;
     notifyListeners();
   }
 

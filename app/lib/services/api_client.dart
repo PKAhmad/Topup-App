@@ -24,13 +24,18 @@ class ApiClient {
         'x-user-id': AppConfig.devUserId,
       };
 
-  Future<dynamic> _get(String path) async {
-    final res = await _http.get(Uri.parse('$baseUrl$path'), headers: _headers);
+  // Every call is time-boxed: an unreachable backend must fail fast and
+  // visibly, never leave a screen spinning forever.
+  Future<dynamic> _get(String path, {Duration timeout = const Duration(seconds: 12)}) async {
+    final res = await _http.get(Uri.parse('$baseUrl$path'), headers: _headers).timeout(timeout);
     return _decode(res);
   }
 
-  Future<dynamic> _post(String path, Map<String, dynamic> body) async {
-    final res = await _http.post(Uri.parse('$baseUrl$path'), headers: _headers, body: jsonEncode(body));
+  Future<dynamic> _post(String path, Map<String, dynamic> body,
+      {Duration timeout = const Duration(seconds: 15)}) async {
+    final res = await _http
+        .post(Uri.parse('$baseUrl$path'), headers: _headers, body: jsonEncode(body))
+        .timeout(timeout);
     return _decode(res);
   }
 
@@ -47,8 +52,13 @@ class ApiClient {
   }
 
   /// Operator auto-detect for a typed number (backend endpoint added in Phase 2).
+  /// Background confirmation only — the phone already detected the operator
+  /// locally, so this gets a short 5-second leash.
   Future<OperatorInfo> detectOperator(String e164) async {
-    final j = await _get('/topups/detect-operator?phone=${Uri.encodeQueryComponent(e164)}');
+    final j = await _get(
+      '/topups/detect-operator?phone=${Uri.encodeQueryComponent(e164)}',
+      timeout: const Duration(seconds: 5),
+    );
     return OperatorInfo.fromJson(j as Map<String, dynamic>);
   }
 
@@ -73,7 +83,7 @@ class ApiClient {
   }
 
   Future<TopupHistoryItem?> getTopup(String id) async {
-    final j = await _get('/topups/$id');
+    final j = await _get('/topups/$id', timeout: const Duration(seconds: 6));
     if (j == null) return null;
     return TopupHistoryItem.fromJson(j as Map<String, dynamic>);
   }

@@ -8,6 +8,12 @@ class OperatorInfo {
   final List<int> fixedLocalAmountsMajor;
   final String? logoUrl;
 
+  /// True when this operator was detected ON THE PHONE from the number's
+  /// prefix (instant, offline). The backend/Reloadly confirmation replaces
+  /// it in the background when reachable; operatorId <= 0 means "not a
+  /// Reloadly id yet".
+  final bool localOnly;
+
   const OperatorInfo({
     required this.operatorId,
     required this.name,
@@ -17,6 +23,7 @@ class OperatorInfo {
     this.localMaxMinor,
     this.fixedLocalAmountsMajor = const [],
     this.logoUrl,
+    this.localOnly = false,
   });
 
   factory OperatorInfo.fromJson(Map<String, dynamic> j) => OperatorInfo(

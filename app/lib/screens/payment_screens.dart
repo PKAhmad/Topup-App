@@ -121,18 +121,23 @@ class _ReviewScreenState extends State<ReviewScreen> {
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _row(context, Icons.phone_android, app.t('send_to'), groupForDisplay(flow.e164!)),
-                    _row(context, Icons.cell_tower, app.t('operator_label'), created!.operatorName),
-                    _row(context, Icons.send_to_mobile, app.t('you_send'),
-                        '${flow.amountLocalMajor} ${created.localCurrency}'),
-                    const Divider(height: 32),
-                    _row(context, Icons.payments, app.t('total_to_pay'),
-                        moneyText(created.totalMinor, created.chargeCurrency), big: true),
+                    GlassCard(
+                      child: Column(
+                        children: [
+                          _row(context, Icons.phone_android, app.t('send_to'), groupForDisplay(flow.e164!)),
+                          _row(context, Icons.cell_tower, app.t('operator_label'), created!.operatorName),
+                          _row(context, Icons.send_to_mobile, app.t('you_send'),
+                              '${flow.amountLocalMajor} ${created.localCurrency}'),
+                          const Divider(height: 32),
+                          _row(context, Icons.payments, app.t('total_to_pay'),
+                              moneyText(created.totalMinor, created.chargeCurrency), big: true),
+                        ],
+                      ),
+                    ),
                     const Spacer(),
                     BigButton(
                       icon: Icons.lock,
                       label: app.t('pay_now'),
-                      color: Colors.green.shade700,
                       onPressed: _paying ? null : _pay,
                     ),
                     const SizedBox(height: 8),
@@ -146,7 +151,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: big ? 34 : 28),
+          Icon(icon, size: big ? 34 : 28, color: AppColors.blue),
           const SizedBox(width: 12),
           Text(label, style: TextStyle(fontSize: big ? 22 : 19)),
           const Spacer(),
@@ -214,14 +219,16 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(strokeWidth: 5),
-            const SizedBox(height: 24),
-            Text(app.t('processing'), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-          ],
+      body: AppBackground(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(strokeWidth: 5, color: AppColors.blue),
+              const SizedBox(height: 24),
+              Text(app.t('processing'), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            ],
+          ),
         ),
       ),
     );
@@ -239,15 +246,16 @@ class ResultScreen extends StatelessWidget {
       app.voice.speak(success ? 'prompt_success' : 'prompt_failed_refund');
     });
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Icon(success ? Icons.check_circle : Icons.cancel,
-                  size: 120, color: success ? Colors.green : Colors.red),
+      body: AppBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Icon(success ? Icons.check_circle : Icons.cancel,
+                    size: 120, color: success ? Colors.green : Colors.red),
               const SizedBox(height: 20),
               Text(success ? app.t('success_title') : app.t('failed_title'),
                   textAlign: TextAlign.center,
@@ -258,15 +266,16 @@ class ResultScreen extends StatelessWidget {
                     textAlign: TextAlign.center, style: const TextStyle(fontSize: 20)),
               ],
               const SizedBox(height: 44),
-              BigButton(
-                icon: Icons.home,
-                label: app.t('done_btn'),
-                onPressed: () {
-                  context.read<TopupFlow>().reset();
-                  Navigator.of(context).popUntil((r) => r.isFirst);
-                },
-              ),
-            ],
+                BigButton(
+                  icon: Icons.home,
+                  label: app.t('done_btn'),
+                  onPressed: () {
+                    context.read<TopupFlow>().reset();
+                    Navigator.of(context).popUntil((r) => r.isFirst);
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -319,20 +328,23 @@ class HistoryScreen extends StatelessWidget {
           }
           return ListView.separated(
             itemCount: items.length,
-            separatorBuilder: (_, __) => const Divider(),
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, i) {
               final it = items[i];
-              return ListTile(
-                leading: Icon(
-                  it.status == 'DELIVERED' ? Icons.check_circle : Icons.info,
-                  color: it.status == 'DELIVERED' ? Colors.green : Colors.orange,
-                  size: 34,
+              return GlassCard(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: ListTile(
+                  leading: Icon(
+                    it.status == 'DELIVERED' ? Icons.check_circle : Icons.info,
+                    color: it.status == 'DELIVERED' ? Colors.green : Colors.orange,
+                    size: 34,
+                  ),
+                  title: Text(groupForDisplay(it.recipientPhone),
+                      textDirection: TextDirection.ltr, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  subtitle: Text(
+                      '${it.operatorName} • ${(it.amountLocalMinor / 100).toStringAsFixed(0)} ${it.localCurrency} • ${moneyText(it.totalMinor, it.chargeCurrency)}'),
+                  trailing: Text(app.t(_statusKey(it.status)), style: const TextStyle(fontSize: 16)),
                 ),
-                title: Text(groupForDisplay(it.recipientPhone),
-                    textDirection: TextDirection.ltr, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                subtitle: Text(
-                    '${it.operatorName} • ${(it.amountLocalMinor / 100).toStringAsFixed(0)} ${it.localCurrency} • ${moneyText(it.totalMinor, it.chargeCurrency)}'),
-                trailing: Text(app.t(_statusKey(it.status)), style: const TextStyle(fontSize: 16)),
               );
             },
           );

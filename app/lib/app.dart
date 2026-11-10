@@ -21,11 +21,16 @@ class TopupApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+        // Expense Tracker palette: neon blue on warm cream, ink-navy text.
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF0091FF),
+          surface: const Color(0xFFFAF5EA),
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF6F0E2),
         useMaterial3: true,
         textTheme: const TextTheme(
-          bodyLarge: TextStyle(fontSize: 19),
-          bodyMedium: TextStyle(fontSize: 17),
+          bodyLarge: TextStyle(fontSize: 19, color: Color(0xFF182740)),
+          bodyMedium: TextStyle(fontSize: 17, color: Color(0xFF182740)),
         ),
       ),
       home: app.languageChosen ? const HomeScreen() : const LanguageScreen(),
