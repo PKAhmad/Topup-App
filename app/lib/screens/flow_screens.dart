@@ -104,10 +104,88 @@ class HomeScreen extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 12),
-          Text(app.t('tagline'),
-              textAlign: TextAlign.center, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 36),
+          // Hero card — the modern top-up app front door.
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              gradient: const LinearGradient(
+                colors: [AppColors.blueLight, AppColors.blue],
+            begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(color: AppColors.blue.withValues(alpha: 0.35), blurRadius: 24, offset: const Offset(0, 10)),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 54,
+                      height: 54,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.22),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
+                      ),
+                      child: const Icon(Icons.send_to_mobile, color: Colors.white, size: 30),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(app.t('tagline'),
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Text(app.t('choose_country'),
+                    style: TextStyle(fontSize: 15, color: Colors.white.withValues(alpha: 0.85))),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      for (final iso in CountryDial.starterCountries)
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(end: 8),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(99),
+                            onTap: () {
+                              flow.reset();
+                              flow.setCountry(iso);
+                              Navigator.of(context)
+                                  .push(MaterialPageRoute(builder: (_) => const NumberScreen()));
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.92),
+                                borderRadius: BorderRadius.circular(99),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(CountryDial.flagByIso[iso] ?? '🏳️',
+                                      style: const TextStyle(fontSize: 19)),
+                                  const SizedBox(width: 6),
+                                  Text(app.t('country_$iso'),
+                                      style: const TextStyle(
+                                          fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
           BigButton(
             icon: Icons.send_to_mobile,
             label: app.t('new_topup'),
@@ -156,38 +234,95 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class CountryScreen extends StatelessWidget {
+class CountryScreen extends StatefulWidget {
   const CountryScreen({super.key});
+
+  @override
+  State<CountryScreen> createState() => _CountryScreenState();
+}
+
+class _CountryScreenState extends State<CountryScreen> {
+  String _query = '';
 
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
     final flow = context.read<TopupFlow>();
+    final q = _query.trim().toLowerCase();
+    final countries = CountryDial.starterCountries.where((iso) {
+      if (q.isEmpty) return true;
+      return app.t('country_$iso').toLowerCase().contains(q) ||
+          iso.toLowerCase().contains(q) ||
+          (CountryDial.dialByIso[iso] ?? '').contains(q);
+    }).toList();
     return StepScaffold(
       title: app.t('choose_country'),
       promptKey: 'prompt_choose_country',
-      body: GridView.count(
-        crossAxisCount: 2,
-        mainAxisSpacing: 14,
-        crossAxisSpacing: 14,
-        childAspectRatio: 1.25,
+      step: 1,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final iso in CountryDial.starterCountries)
-            GlassCard(
-              onTap: () {
-                flow.setCountry(iso);
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NumberScreen()));
-              },
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(CountryDial.flagByIso[iso] ?? '🏳️', style: const TextStyle(fontSize: 46)),
-                  const SizedBox(height: 6),
-                  Text(app.t('country_$iso'),
-                      style: const TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
-                ],
+          TextField(
+            onChanged: (v) => setState(() => _query = v),
+            style: const TextStyle(fontSize: 19),
+            decoration: InputDecoration(
+              hintText: app.t('search_country'),
+              prefixIcon: const Icon(Icons.search, color: AppColors.blue),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.85),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: AppColors.ink.withValues(alpha: 0.22)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: AppColors.blue, width: 2),
               ),
             ),
+          ),
+          const SizedBox(height: 14),
+          Expanded(
+            child: ListView.separated(
+              itemCount: countries.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (context, i) {
+                final iso = countries[i];
+                return GlassCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  onTap: () {
+                    flow.setCountry(iso);
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NumberScreen()));
+                  },
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.ink.withValues(alpha: 0.08)),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(CountryDial.flagByIso[iso] ?? '🏳️',
+                            style: const TextStyle(fontSize: 28)),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(app.t('country_$iso'),
+                            style: const TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
+                      ),
+                      Text('+${CountryDial.dialByIso[iso]}',
+                          textDirection: TextDirection.ltr,
+                          style: const TextStyle(fontSize: 16, color: AppColors.muted)),
+                      const Icon(Icons.chevron_right, color: AppColors.muted),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -281,6 +416,7 @@ class _NumberScreenState extends State<NumberScreen> {
       return StepScaffold(
         title: app.t('confirm_q'),
         promptKey: 'prompt_confirm_number',
+        step: 2,
         autoSpeak: false,
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -330,6 +466,7 @@ class _NumberScreenState extends State<NumberScreen> {
     return StepScaffold(
       title: app.t('enter_number'),
       promptKey: 'prompt_enter_number',
+      step: 2,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -434,11 +571,50 @@ class _AmountScreenState extends State<AmountScreen> {
     return StepScaffold(
       title: app.t('choose_amount'),
       promptKey: 'prompt_choose_amount',
+      step: 3,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('${op.name.isEmpty ? app.t('country_${flow.countryIso}') : op.name} • ${groupForDisplay(flow.e164!)}',
-              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
+          GlassCard(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [AppColors.blueLight, AppColors.blue],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    (op.name.isEmpty ? app.t('country_${flow.countryIso}') : op.name)
+                        .substring(0, 1)
+                        .toUpperCase(),
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(op.name.isEmpty ? app.t('country_${flow.countryIso}') : op.name,
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      Text(groupForDisplay(flow.e164!),
+                          textDirection: TextDirection.ltr,
+                          style: const TextStyle(fontSize: 16, color: AppColors.muted)),
+                    ],
+                  ),
+                ),
+                Text(CountryDial.flagByIso[flow.countryIso!] ?? '🏳️', style: const TextStyle(fontSize: 30)),
+              ],
+            ),
+          ),
           const SizedBox(height: 16),
           Expanded(
             child: GridView.count(
@@ -452,19 +628,41 @@ class _AmountScreenState extends State<AmountScreen> {
                     selected: _selected == a,
                     onTap: () => _pick(a),
                     child: Center(
-                      child: Text('$a $currency',
-                          textDirection: TextDirection.ltr,
-                          style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                              color: _selected == a ? AppColors.blue : AppColors.ink)),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (amounts.length > 2 && a == amounts[2])
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              margin: const EdgeInsets.only(bottom: 6),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                    colors: [AppColors.blueLight, AppColors.blue]),
+                                borderRadius: BorderRadius.circular(99),
+                              ),
+                              child: Text(app.t('popular'),
+                                  style: const TextStyle(
+                                      fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                            ),
+                          Text('$a',
+                              textDirection: TextDirection.ltr,
+                              style: TextStyle(
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.bold,
+                                  color: _selected == a ? AppColors.blue : AppColors.ink)),
+                          Text(currency,
+                              style: const TextStyle(fontSize: 14, color: AppColors.muted)),
+                        ],
+                      ),
                     ),
                   ),
               ],
             ),
           ),
           if (!op.isFixed) ...[
-            Row(
+            GlassCard(
+              padding: const EdgeInsets.all(10),
+              child: Row(
               children: [
                 Expanded(
                   child: TextField(
@@ -497,6 +695,7 @@ class _AmountScreenState extends State<AmountScreen> {
                   icon: const Icon(Icons.check),
                 ),
               ],
+              ),
             ),
             const SizedBox(height: 12),
           ],

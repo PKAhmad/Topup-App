@@ -23,9 +23,9 @@ class ReviewScreen extends StatefulWidget {
 
 class _ReviewScreenState extends State<ReviewScreen> {
   final _api = ApiClient();
-  bool _creating = true;
+  bool _connecting = true;
+  bool _serverOffline = false;
   bool _paying = false;
-  String? _error;
   TopupCreated? _created;
   // One idempotency key per review visit: safe retries, no double charge.
   final String _idemKey =
@@ -34,12 +34,18 @@ class _ReviewScreenState extends State<ReviewScreen> {
   @override
   void initState() {
     super.initState();
+    // LOCAL-FIRST: the review renders instantly from the phone's own data.
+    // The server call below only adds the exact total + enables payment.
     WidgetsBinding.instance.addPostFrameCallback((_) => _create());
   }
 
   Future<void> _create() async {
     final app = context.read<AppState>();
     final flow = context.read<TopupFlow>();
+    setState(() {
+      _connecting = true;
+      _serverOffline = false;
+    });
     try {
       final created = await _api.createTopup(
         recipientPhone: flow.e164!,
@@ -51,7 +57,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
       if (!mounted) return;
       setState(() {
         _created = created;
-        _creating = false;
+        _connecting = false;
       });
       // Speak the whole review: amount, number read-back, total price.
       await app.voice.speakSequence(SpeechComposer.reviewSpeech(
@@ -62,19 +68,28 @@ class _ReviewScreenState extends State<ReviewScreen> {
         chargeCurrency: created.chargeCurrency,
         lang: app.lang,
       ));
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
+      // NOT a dead end: the review stays on screen, the payment state is
+      // explained in words, and the user can retry or go back.
       setState(() {
-        _creating = false;
-        _error = e is ApiException ? e.message : app.t('error_generic');
+        _connecting = false;
+        _serverOffline = true;
       });
-      await app.voice.speak('prompt_error');
     }
   }
 
   Future<void> _pay() async {
     final app = context.read<AppState>();
-    final created = _created!;
+    final created = _created;
+    if (created == null) {
+      // Payments are not live yet — say so plainly instead of an error.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(app.t('server_offline'), style: const TextStyle(fontSize: 17))),
+      );
+      await app.voice.speak('prompt_error');
+      return;
+    }
     if (AppConfig.stripePublishableKey.isEmpty || created.clientSecret == null) {
       // Honest dev state: without the Phase 0 Stripe keys the sheet cannot open.
       ScaffoldMessenger.of(context).showSnackBar(
@@ -110,39 +125,79 @@ class _ReviewScreenState extends State<ReviewScreen> {
     final app = context.watch<AppState>();
     final flow = context.watch<TopupFlow>();
     final created = _created;
+    final opName = created?.operatorName ??
+        (flow.operator!.name.isEmpty ? app.t('country_${flow.countryIso}') : flow.operator!.name);
+    final currency = created?.localCurrency ?? flow.localCurrency;
     return StepScaffold(
       title: app.t('review_title'),
       promptKey: 'prompt_review',
-      autoSpeak: false,
-      body: _creating
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(fontSize: 20, color: Colors.red)))
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    GlassCard(
-                      child: Column(
-                        children: [
-                          _row(context, Icons.phone_android, app.t('send_to'), groupForDisplay(flow.e164!)),
-                          _row(context, Icons.cell_tower, app.t('operator_label'), created!.operatorName),
-                          _row(context, Icons.send_to_mobile, app.t('you_send'),
-                              '${flow.amountLocalMajor} ${created.localCurrency}'),
-                          const Divider(height: 32),
-                          _row(context, Icons.payments, app.t('total_to_pay'),
-                              moneyText(created.totalMinor, created.chargeCurrency), big: true),
-                        ],
-                      ),
-                    ),
-                    const Spacer(),
-                    BigButton(
-                      icon: Icons.lock,
-                      label: app.t('pay_now'),
-                      onPressed: _paying ? null : _pay,
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
+      step: 4,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          GlassCard(
+            child: Column(
+              children: [
+                _row(context, Icons.phone_android, app.t('send_to'), groupForDisplay(flow.e164!)),
+                _row(context, Icons.cell_tower, app.t('operator_label'), opName),
+                _row(context, Icons.send_to_mobile, app.t('you_send'),
+                    '${flow.amountLocalMajor} $currency'),
+                if (created != null) ...[
+                  const Divider(height: 32),
+                  _row(context, Icons.payments, app.t('total_to_pay'),
+                      moneyText(created.totalMinor, created.chargeCurrency), big: true),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          if (_connecting)
+            GlassCard(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 3, color: AppColors.blue),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(app.t('connecting'), style: const TextStyle(fontSize: 17))),
+                ],
+              ),
+            ),
+          if (_serverOffline)
+            GlassCard(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.cloud_off, color: AppColors.muted, size: 26),
+                      const SizedBox(width: 12),
+                      Expanded(
+                          child: Text(app.t('server_offline'), style: const TextStyle(fontSize: 17))),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: _create,
+                    icon: const Icon(Icons.refresh),
+                    label: Text(app.t('try_again'), style: const TextStyle(fontSize: 17)),
+                  ),
+                ],
+              ),
+            ),
+          const Spacer(),
+          BigButton(
+            icon: Icons.lock,
+            label: app.t('pay_now'),
+            onPressed: _paying ? null : _pay,
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
     );
   }
 

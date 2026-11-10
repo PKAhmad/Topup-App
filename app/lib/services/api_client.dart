@@ -78,7 +78,7 @@ class ApiClient {
       'operatorId': operatorId,
       'amountLocalMajor': amountLocalMajor,
       'idempotencyKey': idempotencyKey,
-    });
+    }, timeout: const Duration(seconds: 10));
     return TopupCreated.fromJson(j as Map<String, dynamic>);
   }
 

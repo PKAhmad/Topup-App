@@ -170,6 +170,9 @@ class StepScaffold extends StatefulWidget {
   final Widget body;
   final Widget? bottomBar;
   final bool autoSpeak;
+
+  /// Wizard progress (1..4). 0 hides the progress bar.
+  final int step;
   const StepScaffold({
     super.key,
     required this.title,
@@ -177,6 +180,7 @@ class StepScaffold extends StatefulWidget {
     required this.body,
     this.bottomBar,
     this.autoSpeak = true,
+    this.step = 0,
   });
 
   @override
@@ -205,6 +209,36 @@ class _StepScaffoldState extends State<StepScaffold> {
         foregroundColor: AppColors.ink,
         title: Text(widget.title,
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.ink)),
+        bottom: widget.step == 0
+            ? null
+            : PreferredSize(
+                preferredSize: const Size.fromHeight(16),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                  child: Row(
+                    children: [
+                      for (var i = 1; i <= 4; i++) ...[
+                        if (i > 1) const SizedBox(width: 6),
+                        Expanded(
+                          child: Container(
+                            height: 6,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(99),
+                              gradient: i <= widget.step
+                                  ? const LinearGradient(colors: [AppColors.blueLight, AppColors.blue])
+                                  : null,
+                              color: i <= widget.step ? null : Colors.white.withValues(alpha: 0.55),
+                              border: i <= widget.step
+                                  ? null
+                                  : Border.all(color: AppColors.ink.withValues(alpha: 0.12)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
         actions: [
           Padding(
             padding: const EdgeInsetsDirectional.only(end: 10),
