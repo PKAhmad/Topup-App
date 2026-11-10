@@ -72,3 +72,22 @@ pay-per-topup, Afghan + international. Backend addition needed by the app
    drills.
 4. Phase 2.5: Firebase login replaces the dev `x-user-id` auth; Prisma
    persistence + deployment (Phase 1.5) gives the app a public backend URL.
+
+## First APK — BUILT 2026-11-10 evening
+- Repo created: https://github.com/PKAhmad/Topup-App (public, PKAhmad) — pushed
+  via the workspace SSH key, same route as Karyab.
+- Run #1 failed at Analyze: only 6 info lints, all in the local harness
+  tool/verify_pure.dart (lib/ + test/ were clean) → harness excluded from
+  analysis. Run #2: Analyze + Test PASSED, APK build failed on Gradle 8.7 <
+  Flutter 3.47's minimum 8.14 → Gradle 8.14 wrapper, AGP 8.13.0, Kotlin
+  2.2.20, launcher icons added. Run #3 (42860191610, commit 908d18f):
+  SUCCESS — analyze, all flutter tests, debug APK build, artifact upload.
+- Artifact: topup-app-debug-apk, zip sha256
+  7c7ccf6ee86277e5a2a0c44f4a3d2b7fcb6f1b513dc41c50138a4deff4e1680b (verified
+  byte-identical after download). APK verified with aapt: package
+  app.topup.topup_app, versionName 0.1.0 / code 1, minSdk 24, targetSdk 34,
+  INTERNET permission, all 198 audio placeholder clips bundled.
+  Local copy: ~/workspace/topup-app/Topup-App-v0.1-debug.apk (~171 MB debug).
+- Note: debug APK is large (all ABIs + debug). The app opens and runs the
+  full flow on-device; live top-ups still need the Phase 0 keys + a running
+  backend, and voice is silent until the script is recorded.
