@@ -1,0 +1,67 @@
+// Phase 1 persistence model (PostgreSQL). The services run against repository
+// interfaces (src/store) — Prisma is the production implementation target.
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+
+model User {
+  id        String      @id @default(uuid())
+  firebaseUid String    @unique
+  phone     String?
+  language  String      @default("ps") // ps | fa | en — voice-first default Pashto
+  createdAt DateTime    @default(now())
+  topups    TopupTransaction[]
+}
+
+model TopupTransaction {
+  id               String   @id @default(uuid()) // also sent to Reloadly as customIdentifier (unique, never reused)
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  idempotencyKey   String   @unique
+  recipientPhone   String   // E.164
+  countryIso       String   // e.g. AF
+  operatorId       Int
+  operatorName     String
+  amountLocalMinor Int      // face value delivered, in recipient-currency minor units
+  localCurrency    String   // e.g. AFN
+  costMinor        Int      // what Reloadly charges our balance, in CHARGE currency minor units
+  feeMinor         Int      // our service fee, same currency
+  totalMinor       Int      // what the customer paid = cost + fee
+  chargeCurrency   String   // e.g. EUR
+  status           String   // see src/domain/transaction-state.ts
+  stripePaymentIntentId String? @unique
+  reloadlyTransactionId Int?
+  failureReason    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  ledgerEntries    LedgerEntry[]
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model LedgerEntry {
+  id            String   @id @default(uuid())
+  transactionId String
+  transaction   TopupTransaction @relation(fields: [transactionId], references: [id])
+  account       String   // STRIPE_CLEARING | RELOADLY_BALANCE | TOPUP_PAYABLE | FEE_REVENUE
+  debitMinor    Int      @default(0)
+  creditMinor   Int      @default(0)
+  currency      String
+  memo          String
+  createdAt     DateTime @default(now())
+  @@index([transactionId])
+  @@index([account])
+}
+
+model CatalogOperator {
+  operatorId       Int     @id // Reloadly operator id
+  name             String
+  countryIso       String
+  denominationType String  // FIXED | RANGE
+  localMinMinor    Int?
+  localMaxMinor    Int?
+  fixedAmounts     Json?   // local-currency major amounts when FIXED
+  supportsData     Boolean @default(false)
+  logoUrl          String?
+  updatedAt        DateTime @updatedAt
+  @@index([countryIso])
+}

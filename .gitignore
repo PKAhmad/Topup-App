@@ -1,0 +1,18 @@
+# secrets & local env
+.env
+backend/.env
+# node / build output
+backend/node_modules/
+backend/dist/
+backend/.tmp/
+node_modules/
+# flutter / dart
+app/build/
+app/.dart_tool/
+app/.pub-cache/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/android/local.properties
+*.apk
+*.zip
+.DS_Store
