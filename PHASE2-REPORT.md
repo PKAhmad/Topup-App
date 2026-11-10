@@ -126,3 +126,12 @@ pay-per-topup, Afghan + international. Backend addition needed by the app
   offline notice + retry, 10 s create timeout).
 - Verified by aapt: 0.3.0 / code 3; artifact sha256 2f052ae2… matched.
   Local copy: ~/workspace/topup-app/Topup-App-v0.3-debug.apk.
+
+## v0.4 — REAL VOICE (delivered 2026-11-10 night)
+
+- All 198 clips are now REAL speech (placeholders gone). Whole voice set = 1.16 MB total.
+- Voice: CEO's new ElevenLabs Professional clone — exact account name "Kamran Ahmad" (34 min training, created 2026-11-10) — for Pashto AND Dari; English in library voice "Rachel". Model: Eleven v4 for every generation (never Multilingual), stability 55, similarity 75, style/clone-strength 0, auto-tag on; Pashto/Persian language overrides.
+- Method: number words generated grouped and silence-sliced (verified: all clips 0.39–0.96 s, even pacing); sentence prompts generated ONE BY ONE (51 files) because the grouped v4 takes had in-sentence dramatic pauses that made slicing misalign sentences (caught by duration-vs-text-length checks — prompt_welcome sliced at 0.83 s vs real 7.19 s). Every final clip verified: present, non-silent (mean volume ≈ −18…−22 dB), duration consistent with its text.
+- Clips edge-trimmed and compressed to mono 24 kHz / 32 kbps MP3; same file names as placeholders, zero code change. verify_pure 30/30.
+- Build: commit fe96103, CI run 42910619074 success; artifact zip sha256 d304278950934fa979aa1e8dc276cf86f1aebb5b3f4de22dfeabbae479354103; aapt: versionName 0.4.0 / code 4, targetSdk 34, minSdk 24, 198 audio assets inside the APK. Local copy: Topup-App-v0.4-debug.apk. Fresh debug key — uninstall v0.3 first.
+- Audio tooling kept in repo: audio-tools/slice_clips.py + key lists + grouped generation masters (gens/).
