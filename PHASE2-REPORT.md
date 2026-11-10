@@ -91,3 +91,25 @@ pay-per-topup, Afghan + international. Backend addition needed by the app
 - Note: debug APK is large (all ABIs + debug). The app opens and runs the
   full flow on-device; live top-ups still need the Phase 0 keys + a running
   backend, and voice is silent until the script is recorded.
+
+## v0.2 — Expense Tracker design + instant detection (2026-11-10 evening)
+- CEO feedback on v0.1: (1) use the Expense Tracker's design; (2) number
+  detection hung on "searching" — root cause: the app waited on the backend
+  (unreachable from a real phone, emulator address) with NO timeout.
+- Detection is now LOCAL-FIRST in the app: country from the dial code,
+  operator from the number prefix (AF fully mapped: 70/71 AWCC, 79/72 Roshan,
+  77/76 MTN, 78/73 Etisalat, 74 Salaam; PK/IR/TR broad families in national
+  form). Live preview while typing; Continue is instant; backend confirm
+  runs in background with a 5 s timeout and only refines. All API calls
+  time-boxed (5–15 s). If the typed number's country differs from the tapped
+  country, the flow follows the number.
+- Design: Expense Tracker language ported to Flutter — cream gradient
+  (#FCF9F2→#F6F0E2) + blue radial glows, white glass cards (22px radius,
+  navy shadow), neon-blue gradient primary buttons (#3FC1FF→#0091FF),
+  ink #182740 text, blue launcher icon. No live blur (scroll performance).
+- Build lesson: android/app/build.gradle had versionCode/Name HARDCODED
+  (0.1.0/1) — run #4 shipped new code with the old label. Now wired to
+  pubspec via local.properties. Run #5 (42880599233, ff0cc67) verified by
+  aapt: versionName 0.2.0 / code 2, artifact sha256 ef526e3f… matched.
+  Local copy: ~/workspace/topup-app/Topup-App-v0.2-debug.apk.
+- Pure checks 30/30 (verify_pure); CI analyze + flutter tests passed.
