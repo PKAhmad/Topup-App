@@ -38,7 +38,7 @@ For Pashto use natural Nangarhar/Eastern speech.
 | digits | digit_0..digit_9 | صفر، یو، دوه، درې، څلور، پنځه، شپږ، اووه، اته، نهه | صفر، یک، دو، سه، چهار، پنج، شش، هفت، هشت، نه | zero..nine |
 | teens | teen_11..teen_19 | یوولس، دولس، دیارلس، څوارلس، پنځلس، شپاړس، اوولس، اتلس، نولس | یازده، دوازده، سیزده، چهارده، پانزده، شانزده، هفده، هجده، نوزده | eleven..nineteen |
 | tens | tens_10, tens_20..tens_90 | لس، شل، دېرش، څلوېښت، پنځوس، شپېته، اویا، اتیا، نوي | ده، بیست، سی، چهل، پنجاه، شصت، هفتاد، هشتاد، نود | ten, twenty..ninety |
-| tens suffix (Pashto only) | tensx_20..tensx_90 | ویشت، دېرش، څلوېښت، پنځوس، شپېته، اویا، اتیا، نوي | — (not used in Dari) | — (not used in English) |
+| tens suffix (Pashto only) | tensx_20..tensx_90 | ویشت only — دېرش، څلوېښت، پنځوس، شپېته، اویا، اتیا، نوي are the SAME words as the tens row: generate once, the tensx_30..tensx_90 clip files are copies of tens_30..tens_90 (deduplicated per CEO order 2026-11-10) | — (not used in Dari) | — (not used in English) |
 | scales | scale_hundred, scale_thousand | سل، زر | صد، هزار | hundred, thousand |
 | joiners | word_and, word_point | او، اشاریه | و، ممیز | and, point |
 | currencies | cur_AFN, cur_EUR, cur_USD, cur_PKR, cur_GBP, cur_AED, cur_SAR, cur_TRY, cur_SEK | افغانۍ، یورو، ډالر، روپۍ، پونډ، درهم، ریال، لیره، کرون | افغانی، یورو، دالر، روپیه، پوند، درهم، ریال، لیره، کرون | Afghanis, euros, dollars, rupees, pounds, dirhams, riyals, lira, kronor |
